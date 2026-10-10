@@ -85,9 +85,17 @@ export function shuffle(array) {
 }
 
 /**
+ * Normalize for answer check: trim, lowercase, and fold German specials
+ * so ae/oe/ue/ss also match ä/ö/ü/ß.
  * @param {string} value
  * @returns {string}
  */
 export function normalizeAnswer(value) {
-  return value.trim().toLowerCase()
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/ä/g, 'ae')
+    .replace(/ö/g, 'oe')
+    .replace(/ü/g, 'ue')
+    .replace(/ß/g, 'ss')
 }

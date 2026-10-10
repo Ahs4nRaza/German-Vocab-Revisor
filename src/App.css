@@ -95,6 +95,15 @@
 
 .quiz-answer {
   margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.umlaut-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .mcq-group {

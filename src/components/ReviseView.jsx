@@ -55,7 +55,7 @@ export default function ReviseView({ subcategory }) {
         rowKey={(row) => `${row.german}-${row.english}`}
         columns={columns}
         dataSource={filtered}
-        pagination={{ pageSize: 20, showSizeChanger: false }}
+        pagination={false}
         size="middle"
       />
     </div>

@@ -1,8 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Alert, Button, Input, Progress, Radio, Space, Typography } from 'antd'
 import { normalizeAnswer, shuffle } from '../data/vocab'
 
 const { Title, Text } = Typography
+
+const UMLAUTS = ['ä', 'ö', 'ü', 'Ä', 'Ö', 'Ü', 'ß']
 
 function getPrompt(word, direction) {
   return direction === 'de-en' ? word.german : word.english
@@ -30,6 +32,7 @@ export default function QuizView({
   immediateFeedback,
   onFinish,
 }) {
+  const inputRef = useRef(null)
   const [index, setIndex] = useState(0)
   const [typedAnswer, setTypedAnswer] = useState('')
   const [mcqAnswer, setMcqAnswer] = useState(null)
@@ -42,6 +45,7 @@ export default function QuizView({
   const expected = getExpected(current, direction)
   const prompt = getPrompt(current, direction)
   const isLast = index + 1 >= words.length
+  const showUmlauts = format === 'typed' && direction === 'en-de'
 
   const mcqOptions = useMemo(
     () => (format === 'mcq' ? buildMcqOptions(words, current, direction) : []),
@@ -59,6 +63,22 @@ export default function QuizView({
     setMcqAnswer(null)
     setChecked(false)
     setIsCorrect(false)
+  }
+
+  function insertUmlaut(char) {
+    if (checked) return
+
+    const el = inputRef.current?.input
+    const start = el?.selectionStart ?? typedAnswer.length
+    const end = el?.selectionEnd ?? typedAnswer.length
+    const next = typedAnswer.slice(0, start) + char + typedAnswer.slice(end)
+    setTypedAnswer(next)
+
+    requestAnimationFrame(() => {
+      el?.focus()
+      const pos = start + char.length
+      el?.setSelectionRange(pos, pos)
+    })
   }
 
   function finishOrAdvance(nextCorrect, nextWrong) {
@@ -167,17 +187,35 @@ export default function QuizView({
 
       <div className="quiz-answer">
         {format === 'typed' ? (
-          <Input
-            size="large"
-            placeholder="Type your answer"
-            value={typedAnswer}
-            disabled={checked}
-            onChange={(e) => setTypedAnswer(e.target.value)}
-            onPressEnter={() => {
-              if (canSubmit) handleSubmit()
-              else if (checked) handleNextAfterFeedback()
-            }}
-          />
+          <>
+            <Input
+              ref={inputRef}
+              size="large"
+              placeholder="Type your answer"
+              value={typedAnswer}
+              disabled={checked}
+              onChange={(e) => setTypedAnswer(e.target.value)}
+              onPressEnter={() => {
+                if (canSubmit) handleSubmit()
+                else if (checked) handleNextAfterFeedback()
+              }}
+            />
+            {showUmlauts && (
+              <div className="umlaut-bar">
+                {UMLAUTS.map((char) => (
+                  <Button
+                    key={char}
+                    size="small"
+                    disabled={checked}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => insertUmlaut(char)}
+                  >
+                    {char}
+                  </Button>
+                ))}
+              </div>
+            )}
+          </>
         ) : (
           <Radio.Group
             className="mcq-group"
